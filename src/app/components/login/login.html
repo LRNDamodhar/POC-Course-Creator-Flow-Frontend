@@ -1,0 +1,61 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>AI Course Creator</h1>
+      <p>Sign in to continue</p>
+    </div>
+
+    <form (submit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          [value]="username()"
+          (input)="onUsernameChange($event)"
+          placeholder="Enter your username"
+          [disabled]="isLoading()"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          [value]="password()"
+          (input)="onPasswordChange($event)"
+          placeholder="Enter your password"
+          [disabled]="isLoading()"
+          required
+        />
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-message">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <button 
+        type="submit" 
+        class="login-button"
+        [disabled]="isLoading()"
+      >
+        @if (isLoading()) {
+          <span class="spinner"></span>
+          Signing in...
+        } @else {
+          Sign In
+        }
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p class="demo-info">
+        <strong>Demo:</strong> Enter any username and password (min 4 characters)
+      </p>
+    </div>
+  </div>
+</div>

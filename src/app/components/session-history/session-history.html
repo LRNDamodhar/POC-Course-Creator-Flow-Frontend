@@ -1,0 +1,124 @@
+<div class="session-history-container" [class.visible]="isVisible()">
+  <!-- Toggle Button (always visible) -->
+  <button 
+    class="history-toggle" 
+    (click)="toggleHistory()" 
+    [title]="isVisible() ? 'Hide History' : 'Show History'"
+    [class.panel-open]="isVisible()">
+    <span class="icon">📚</span>
+    <span class="label">{{ isVisible() ? 'Close' : 'History' }}</span>
+  </button>
+
+  <!-- History Panel -->
+  <div class="history-panel" *ngIf="isVisible()">
+    <!-- Header -->
+    <div class="history-header">
+      <div class="header-title">
+        <h2>Session History</h2>
+        <span class="session-count">{{ filteredSessions().length }} session{{ filteredSessions().length !== 1 ? 's' : '' }}</span>
+      </div>
+      <div class="header-actions">
+        <button class="refresh-btn" (click)="refresh()" [disabled]="isLoading()" title="Refresh">
+          <span class="icon" [class.spinning]="isLoading()">🔄</span>
+        </button>
+        <button class="close-btn" (click)="toggleHistory()" title="Close">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search sessions by title, ID, or date..."
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+      <span class="search-icon">🔍</span>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading()">
+      <div class="spinner"></div>
+      <p>Loading sessions...</p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" *ngIf="error()">
+      <div class="error-icon">⚠️</div>
+      <p>{{ error() }}</p>
+      <button class="retry-btn" (click)="refresh()">Retry</button>
+    </div>
+
+    <!-- Sessions List -->
+    <div class="sessions-list" *ngIf="!isLoading() && !error()">
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="filteredSessions().length === 0">
+        <div class="empty-icon">📭</div>
+        <p *ngIf="searchQuery()">No sessions found matching "{{ searchQuery() }}"</p>
+        <p *ngIf="!searchQuery()">No sessions yet. Start a conversation to create one!</p>
+      </div>
+
+      <!-- Session Items -->
+      <div
+        class="session-item"
+        *ngFor="let session of filteredSessions()"
+        (click)="loadSession(session.sessionId)"
+        [class.has-course]="session.hasCourseData"
+        [class.has-outline]="session.hasCourseOutline"
+      >
+        <!-- Session Icon -->
+        <div class="session-icon">
+          {{ getSessionIcon(session) }}
+        </div>
+
+        <!-- Session Details -->
+        <div class="session-details">
+          <div class="session-title">
+            {{ session.title }}
+          </div>
+          <div class="session-meta">
+            <span class="session-date">
+              <span class="meta-icon">📅</span>
+              {{ formatDate(session.lastActivity) }}
+            </span>
+            <span class="session-time">
+              <span class="meta-icon">🕐</span>
+              {{ formatTime(session.lastActivity) }}
+            </span>
+            <span class="session-messages">
+              <span class="meta-icon">💬</span>
+              {{ session.messageCount }} message{{ session.messageCount !== 1 ? 's' : '' }}
+            </span>
+          </div>
+          <div class="session-badges">
+            <span class="badge" [class.badge-outline]="session.hasCourseOutline" [class.badge-course]="session.hasCourseData && !session.hasCourseOutline">
+              {{ getSessionBadge(session) }}
+            </span>
+            <span class="badge badge-status" [class.badge-active]="session.status === 'active'" [class.badge-archived]="session.status === 'archived'">
+              {{ session.status }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Delete Button -->
+        <button
+          class="delete-btn"
+          (click)="deleteSession(session.sessionId, $event)"
+          title="Delete session"
+        >
+          🗑️
+        </button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="history-footer" *ngIf="!isLoading() && !error() && sessions().length > 0">
+      <p class="footer-info">
+        Showing {{ filteredSessions().length }} of {{ sessions().length }} sessions
+      </p>
+    </div>
+  </div>
+</div>

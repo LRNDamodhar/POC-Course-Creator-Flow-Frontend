@@ -1,0 +1,750 @@
+<div class="detail-section course-data-section">
+  <h3>📘 Course Details</h3>
+
+  @if (courseData) {
+    <div class="course-card">
+
+      <!-- ── Course Header ─────────────────────────────────────── -->
+      <div class="course-header">
+        <h4 class="course-title">{{ courseData.title }}</h4>
+        <span class="course-status">{{ courseData.status || 'generated' }}</span>
+      </div>
+
+      @if (courseData.description) {
+        <div class="course-description">
+          <p>{{ courseData.description }}</p>
+        </div>
+      }
+
+      @if (courseData.topicArea) {
+        <div class="course-meta">
+          <div class="meta-item">
+            <span class="meta-label">Topic Area:</span>
+            <span class="meta-value">{{ courseData.topicArea }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- ── Stats ─────────────────────────────────────────────── -->
+      @if (courseData.lessons && courseData.lessons.length > 0) {
+        <div class="course-stats">
+          <div class="stat-item">
+            <div class="stat-icon">📚</div>
+            <div class="stat-content">
+              <span class="stat-value">{{ courseData.lessons.length }}</span>
+              <span class="stat-label">Lessons</span>
+            </div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-icon">📄</div>
+            <div class="stat-content">
+              <span class="stat-value">{{ getTotalPages() }}</span>
+              <span class="stat-label">Total Pages</span>
+            </div>
+          </div>
+          @if (courseData.generatedAt) {
+            <div class="stat-item">
+              <div class="stat-icon">📅</div>
+              <div class="stat-content">
+                <span class="stat-value">{{ formatDate(courseData.generatedAt) }}</span>
+                <span class="stat-label">Generated</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- ── Lessons List ────────────────────────────────────── -->
+        <div class="lessons-summary">
+          <h4>Lessons Overview</h4>
+          <div class="lessons-list">
+            @for (lesson of courseData.lessons; track lesson.title; let i = $index) {
+              <div class="lesson-item" [class.expanded]="expandedLessons.has(i)">
+
+                <!-- Lesson header row -->
+                <div class="lesson-header" (click)="toggleLesson(i)">
+                  <div class="lesson-number">{{ i + 1 }}</div>
+                  <div class="lesson-info">
+                    <div class="lesson-title">{{ lesson.title }}</div>
+                    <div class="lesson-meta">
+                      <span class="lesson-pages">{{ lesson.pages?.length || 0 }} pages</span>
+                      @if (lesson.lessonType) {
+                        <span class="lesson-type-badge">{{ lesson.lessonType }}</span>
+                      }
+                    </div>
+                  </div>
+                  <span class="expand-icon">{{ expandedLessons.has(i) ? '▼' : '▶' }}</span>
+                </div>
+
+                <!-- Pages list (visible when lesson is expanded) -->
+                @if (expandedLessons.has(i) && lesson.pages && lesson.pages.length > 0) {
+                  <div class="pages-container">
+                    @for (page of lesson.pages; track $index; let pageIdx = $index) {
+                      <div class="page-item" [class.page-expanded]="isPageExpanded(i, pageIdx)">
+
+                        <!-- Page header row -->
+                        <div class="page-header" (click)="togglePage(i, pageIdx)">
+                          <div class="page-header-left">
+                            <span class="page-number">{{ pageIdx + 1 }}</span>
+                            <span class="page-title-text">{{ page.title }}</span>
+                            <span class="page-template-badge" [style.background]="getTemplateColor(page.templateType)">
+                              {{ getTemplateIcon(page.templateType) }} {{ getTemplateLabel(page.templateType) }}
+                            </span>
+                          </div>
+                          <span class="expand-icon">{{ isPageExpanded(i, pageIdx) ? '▼' : '▶' }}</span>
+                        </div>
+
+                        <!-- Page detail (visible when page is expanded) -->
+                        @if (isPageExpanded(i, pageIdx)) {
+                          <div class="page-full-content">
+
+                            <!-- ══ COMMON FIELDS (all templates) ══ -->
+                            @if (page.text) {
+                              <div class="content-field">
+                                <label class="field-label">On-Screen Text:</label>
+                                <div class="content-value html-content" [innerHTML]="page.text"></div>
+                              </div>
+                            }
+                            @if (page.audioTranscript) {
+                              <div class="content-field">
+                                <label class="field-label">Audio Narration:</label>
+                                <div class="content-value html-content" [innerHTML]="page.audioTranscript"></div>
+                              </div>
+                            }
+                            @if (page.backgroundImageGraphicDescription) {
+                              <div class="content-field">
+                                <label class="field-label">Image Description:</label>
+                                <div class="content-value">{{ page.backgroundImageGraphicDescription }}</div>
+                              </div>
+                            }
+                            @if (page.backgroundImageAltText) {
+                              <div class="content-field">
+                                <label class="field-label">Alternate Text:</label>
+                                <div class="content-value">{{ page.backgroundImageAltText }}</div>
+                              </div>
+                            }
+
+                            <!-- ══ textGraphic ══ -->
+                            @if (page.templateType === 'textGraphic') {
+                              <div class="template-section">
+                                <div class="template-section-title">🖼️ Text + Graphic Settings</div>
+                                @if (page.contentGrid) {
+                                  <div class="content-field inline">
+                                    <label class="field-label">Layout Grid:</label>
+                                    <span class="badge">{{ page.contentGrid }}</span>
+                                  </div>
+                                }
+                                @if (page.pageCovered) {
+                                  <div class="content-field inline">
+                                    <label class="field-label">Page Coverage:</label>
+                                    <span class="badge">{{ page.pageCovered }}%</span>
+                                  </div>
+                                }
+                                @if (page.textLayout) {
+                                  <div class="content-field inline">
+                                    <label class="field-label">Text Layout:</label>
+                                    <span class="badge">{{ page.textLayout }}</span>
+                                  </div>
+                                }
+                                @if (page.textBackground) {
+                                  <div class="content-field inline">
+                                    <label class="field-label">Text Background:</label>
+                                    <span class="badge">{{ page.textBackground }}</span>
+                                  </div>
+                                }
+                                @if (page.hasImageOnly) {
+                                  <div class="content-field inline">
+                                    <label class="field-label">Image Only:</label>
+                                    <span class="badge badge-bool">Yes</span>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ saq ══ -->
+                            @if (page.templateType === 'saq' && page.question) {
+                              <div class="template-section">
+                                <div class="template-section-title">❓ SAQ Question</div>
+                                @if (page.question.questionText) {
+                                  <div class="content-field">
+                                    <label class="field-label">Question:</label>
+                                    <div class="content-value html-content" [innerHTML]="page.question.questionText"></div>
+                                  </div>
+                                }
+                                @if (page.question.questionDescription) {
+                                  <div class="content-field">
+                                    <label class="field-label">Question Description:</label>
+                                    <div class="content-value html-content" [innerHTML]="page.question.questionDescription"></div>
+                                  </div>
+                                }
+                                <div class="content-field inline">
+                                  <label class="field-label">Question Type:</label>
+                                  <span class="badge">{{ page.question.questionType }}</span>
+                                </div>
+                                @if (page.question.choices && page.question.choices.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Answer Options:</label>
+                                    <div class="choices-list">
+                                      @for (choice of page.question.choices; track $index; let ci = $index) {
+                                        <div class="choice-item" [class.correct]="choice.isCorrect">
+                                          <span class="choice-letter">{{ getChoiceLetter(ci) }}</span>
+                                          <span class="choice-text" [innerHTML]="choice.text"></span>
+                                          @if (choice.isCorrect) { <span class="correct-badge">✓ Correct</span> }
+                                        </div>
+                                        @if (choice.choiceLevelFeedbackTitle) {
+                                          <div class="feedback-sub">
+                                            <span class="field-label">Feedback:</span> {{ choice.choiceLevelFeedbackTitle }} — {{ choice.choiceLevelFeedbackSummary }}
+                                          </div>
+                                        }
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                                @if (page.retrySetting !== undefined) {
+                                  <div class="content-field inline">
+                                    <label class="field-label">Retry Attempts:</label>
+                                    <span class="badge">{{ page.retrySetting }}</span>
+                                  </div>
+                                }
+                                @if (page.feedbackCorrectTitle || page.feedbackIncorrectTitle) {
+                                  <div class="feedback-block">
+                                    @if (page.feedbackCorrectTitle) {
+                                      <div class="feedback-row correct-fb">
+                                        <strong>✓ {{ page.feedbackCorrectTitle }}</strong>
+                                        <div [innerHTML]="page.feedbackCorrectSummary"></div>
+                                      </div>
+                                    }
+                                    @if (page.feedbackIncorrectTitle) {
+                                      <div class="feedback-row incorrect-fb">
+                                        <strong>✗ {{ page.feedbackIncorrectTitle }}</strong>
+                                        <div [innerHTML]="page.feedbackIncorrectSummary"></div>
+                                      </div>
+                                    }
+                                    @if (page.feedbackRetryTitle) {
+                                      <div class="feedback-row retry-fb">
+                                        <strong>🔄 {{ page.feedbackRetryTitle }}</strong>
+                                        <div [innerHTML]="page.feedbackRetrySummary"></div>
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                                @if (page.foregroundImageToggle) {
+                                  <div class="content-field">
+                                    <label class="field-label">Foreground Image:</label>
+                                    <div class="inline-fields">
+                                      @if (page.foregroundLayout) { <span class="badge">Layout: {{ page.foregroundLayout }}</span> }
+                                      @if (page.foreGroundImageAltText) { <span class="sub-value">Alt: {{ page.foreGroundImageAltText }}</span> }
+                                      @if (page.foreGroundImageGraphicDescription) { <span class="sub-value">Desc: {{ page.foreGroundImageGraphicDescription }}</span> }
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ selectAndReveal ══ -->
+                            @if (page.templateType === 'selectAndReveal') {
+                              <div class="template-section">
+                                <div class="template-section-title">👆 Select & Reveal</div>
+                                @if (page.navigationalPrompt) {
+                                  <div class="content-field">
+                                    <label class="field-label">Navigational Prompt:</label>
+                                    <div class="content-value">{{ page.navigationalPrompt }}</div>
+                                  </div>
+                                }
+                                <div class="content-field inline">
+                                  <label class="field-label">Interaction Order:</label>
+                                  <span class="badge">{{ page.interactionToAppear }}</span>
+                                </div>
+                                @if (page.layoutInteractions) {
+                                  <div class="content-field inline">
+                                    <label class="field-label">Layout:</label>
+                                    <span class="badge">{{ page.layoutInteractions }}</span>
+                                  </div>
+                                }
+                                @if (page.clickAndRevealItems && page.clickAndRevealItems.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Click-to-Reveal Items:</label>
+                                    <div class="reveal-list">
+                                      @for (item of page.clickAndRevealItems; track $index; let ri = $index) {
+                                        <div class="reveal-item">
+                                          <div class="reveal-click"><strong>Click {{ ri + 1 }}:</strong> {{ item.click }}</div>
+                                          <div class="reveal-text html-content" [innerHTML]="item.reveal"></div>
+                                          @if (item.backgroundImageGraphicDescription) {
+                                            <div class="sub-value">Image Desc: {{ item.backgroundImageGraphicDescription }}</div>
+                                          }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ consent ══ -->
+                            @if (page.templateType === 'consent') {
+                              <div class="template-section">
+                                <div class="template-section-title">✅ Consent Checklist</div>
+                                @if (page.consentChecklist && page.consentChecklist.length > 0) {
+                                  <div class="checklist-list">
+                                    @for (item of page.consentChecklist; track $index) {
+                                      <div class="checklist-item">☐ {{ item.text }}</div>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ selectAndRevealHotSpots ══ -->
+                            @if (page.templateType === 'selectAndRevealHotSpots') {
+                              <div class="template-section">
+                                <div class="template-section-title">🎯 Hotspots</div>
+                                <div class="inline-fields">
+                                  @if (page.hotspotSelectionType) { <span class="badge">Selection: {{ page.hotspotSelectionType }}</span> }
+                                  @if (page.hotspotPosition) { <span class="badge">Position: {{ page.hotspotPosition }}</span> }
+                                  @if (page.pageCovered) { <span class="badge">Coverage: {{ page.pageCovered }}%</span> }
+                                  @if (page.unlockHotspotToggle) { <span class="badge badge-bool">Unlock: {{ page.unlockCount }}</span> }
+                                </div>
+                                @if (page.hotspotItems && page.hotspotItems.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Hotspot Items:</label>
+                                    <div class="reveal-list">
+                                      @for (item of page.hotspotItems; track $index; let hi = $index) {
+                                        <div class="reveal-item">
+                                          <strong>{{ hi + 1 }}. {{ item.title }}</strong>
+                                          <div class="html-content" [innerHTML]="item.text"></div>
+                                          @if (item.hotspotItemImageDescription) {
+                                            <div class="sub-value">Image Desc: {{ item.hotspotItemImageDescription }}</div>
+                                          }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ video ══ -->
+                            @if (page.templateType === 'video') {
+                              <div class="template-section">
+                                <div class="template-section-title">🎬 Video Panels</div>
+                                <div class="content-field inline">
+                                  <label class="field-label">Scrubbing:</label>
+                                  <span class="badge">{{ page.isVideoScrubbing ? 'Enabled' : 'Disabled' }}</span>
+                                </div>
+                                @if (page.videoPanels && page.videoPanels.length > 0) {
+                                  <div class="reveal-list">
+                                    @for (panel of page.videoPanels; track $index; let vi = $index) {
+                                      <div class="reveal-item">
+                                        <strong>Panel {{ vi + 1 }}</strong>
+                                        <div>{{ panel.text }}</div>
+                                        @if (panel.panelImageDescription) { <div class="sub-value">Image Desc: {{ panel.panelImageDescription }}</div> }
+                                        @if (panel.panelAltText) { <div class="sub-value">Alt Text: {{ panel.panelAltText }}</div> }
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ binaryList ══ -->
+                            @if (page.templateType === 'binaryList') {
+                              <div class="template-section">
+                                <div class="template-section-title">⚖️ Binary List</div>
+                                <div class="inline-fields">
+                                  @if (page.questionHasImages) { <span class="badge">Has Images: {{ page.questionHasImages }}</span> }
+                                  @if (page.questionAppearOneAtTime) { <span class="badge">One at a Time: {{ page.questionAppearOneAtTime }}</span> }
+                                  @if (page.pageCovered) { <span class="badge">Coverage: {{ page.pageCovered }}</span> }
+                                </div>
+                                @if (page.choices && page.choices.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Answer Choices:</label>
+                                    <div class="inline-fields">
+                                      @for (choice of page.choices; track $index) {
+                                        <span class="badge">{{ choice.id }}: {{ choice.text }}</span>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                                @if (page.questions && page.questions.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Questions:</label>
+                                    <div class="reveal-list">
+                                      @for (q of page.questions; track $index; let qi = $index) {
+                                        <div class="reveal-item">
+                                          <div><strong>Q{{ qi + 1 }}:</strong> <span [innerHTML]="q.text"></span></div>
+                                          <div class="sub-value">Correct: {{ q.correctChoiceId }}</div>
+                                          @if (q.imageIconDescription) { <div class="sub-value">Icon Desc: {{ q.imageIconDescription }}</div> }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                                @if (page.correctFeedbackTitle || page.incorrectFeedbackTitle) {
+                                  <div class="feedback-block">
+                                    @if (page.correctFeedbackTitle) {
+                                      <div class="feedback-row correct-fb">
+                                        <strong>✓ {{ page.correctFeedbackTitle }}</strong>
+                                        <div [innerHTML]="page.correctFeedbackSummary"></div>
+                                      </div>
+                                    }
+                                    @if (page.incorrectFeedbackTitle) {
+                                      <div class="feedback-row incorrect-fb">
+                                        <strong>✗ {{ page.incorrectFeedbackTitle }}</strong>
+                                        <div [innerHTML]="page.incorrectFeedbackSummary"></div>
+                                      </div>
+                                    }
+                                    @if (page.partialFeedbackTitle) {
+                                      <div class="feedback-row partial-fb">
+                                        <strong>~ {{ page.partialFeedbackTitle }}</strong>
+                                        <div>{{ page.partialFeedbackSummary }}</div>
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ consult ══ -->
+                            @if (page.templateType === 'consult') {
+                              <div class="template-section">
+                                <div class="template-section-title">💬 Consult</div>
+                                <div class="inline-fields">
+                                  @if (page.textLayout) { <span class="badge">Layout: {{ page.textLayout }}</span> }
+                                  @if (page.questionType) { <span class="badge">Q Type: {{ page.questionType }}</span> }
+                                  @if (page.retrySettings !== undefined) { <span class="badge">Retries: {{ page.retrySettings }}</span> }
+                                  @if (page.showQuote) { <span class="badge badge-bool">Show Quote</span> }
+                                </div>
+                                @if (page.consultPanels && page.consultPanels.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Consult Panels:</label>
+                                    <div class="reveal-list">
+                                      @for (panel of page.consultPanels; track $index; let pi = $index) {
+                                        <div class="reveal-item">
+                                          <strong>{{ pi + 1 }}. {{ panel.title }}</strong>
+                                          <div class="html-content" [innerHTML]="panel.text"></div>
+                                          @if (panel.clickImageDescription) { <div class="sub-value">Image Desc: {{ panel.clickImageDescription }}</div> }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                                @if (page.questionTitle) {
+                                  <div class="content-field">
+                                    <label class="field-label">Question Title:</label>
+                                    <div class="content-value">{{ page.questionTitle }}</div>
+                                  </div>
+                                }
+                                @if (page.question) {
+                                  <div class="content-field">
+                                    <label class="field-label">Question:</label>
+                                    <div class="content-value">{{ page.question }}</div>
+                                  </div>
+                                }
+                                @if (page.consultQuestionOptions && page.consultQuestionOptions.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Answer Options:</label>
+                                    <div class="choices-list">
+                                      @for (opt of page.consultQuestionOptions; track $index; let oi = $index) {
+                                        <div class="choice-item" [class.correct]="opt.isCorrect">
+                                          <span class="choice-letter">{{ getChoiceLetter(oi) }}</span>
+                                          <span class="choice-text">{{ opt.text }}</span>
+                                          @if (opt.isCorrect) { <span class="correct-badge">✓ Correct</span> }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                                @if (page.feedbackCorrectTitle || page.feedbackIncorrectTitle) {
+                                  <div class="feedback-block">
+                                    @if (page.feedbackCorrectTitle) {
+                                      <div class="feedback-row correct-fb">
+                                        <strong>✓ {{ page.feedbackCorrectTitle }}</strong>
+                                        <div [innerHTML]="page.feedbackCorrectSummary"></div>
+                                      </div>
+                                    }
+                                    @if (page.feedbackIncorrectTitle) {
+                                      <div class="feedback-row incorrect-fb">
+                                        <strong>✗ {{ page.feedbackIncorrectTitle }}</strong>
+                                        <div [innerHTML]="page.feedbackIncorrectSummary"></div>
+                                      </div>
+                                    }
+                                    @if (page.feedbackRetryTitle) {
+                                      <div class="feedback-row retry-fb">
+                                        <strong>🔄 {{ page.feedbackRetryTitle }}</strong>
+                                        <div [innerHTML]="page.feedbackRetrySummary"></div>
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ coreImage ══ -->
+                            @if (page.templateType === 'coreImage') {
+                              <div class="template-section">
+                                <div class="template-section-title">🖼️ Core Image</div>
+                                <div class="inline-fields">
+                                  @if (page.foregroundLayout) { <span class="badge">Foreground: {{ page.foregroundLayout }}</span> }
+                                  @if (page.forgroundImageAppearance) { <span class="badge">Appearance: {{ page.forgroundImageAppearance }}</span> }
+                                </div>
+                                @if (page.foreGroundImageGraphicDescription) {
+                                  <div class="content-field">
+                                    <label class="field-label">Image Description:</label>
+                                    <div class="content-value">{{ page.foreGroundImageGraphicDescription }}</div>
+                                  </div>
+                                }
+                                @if (page.foreGroundImageAltText) {
+                                  <div class="content-field">
+                                    <label class="field-label">Alternate Text:</label>
+                                    <div class="content-value">{{ page.foreGroundImageAltText }}</div>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ saqVideo ══ -->
+                            @if (page.templateType === 'saqVideo') {
+                              <div class="template-section">
+                                <div class="template-section-title">🎥 SAQ Video</div>
+                                @if (page.videoPanelTitle) {
+                                  <div class="content-field">
+                                    <label class="field-label">Video Panel Title:</label>
+                                    <div class="content-value">{{ page.videoPanelTitle }}</div>
+                                  </div>
+                                }
+                                @if (page.videoPanelText) {
+                                  <div class="content-field">
+                                    <label class="field-label">Video Panel Text:</label>
+                                    <div class="content-value html-content" [innerHTML]="page.videoPanelText"></div>
+                                  </div>
+                                }
+                                <div class="inline-fields">
+                                  @if (page.isVideoScrubbing !== undefined) { <span class="badge">Scrubbing: {{ page.isVideoScrubbing ? 'On' : 'Off' }}</span> }
+                                  @if (page.retrySetting !== undefined) { <span class="badge">Retries: {{ page.retrySetting }}</span> }
+                                  @if (page.pageVideoThumbnailEnabled) { <span class="badge badge-bool">Thumbnail</span> }
+                                </div>
+                                @if (page.question) {
+                                  <div class="content-field">
+                                    <label class="field-label">Question:</label>
+                                    <div class="content-value html-content" [innerHTML]="page.question.questionTitle"></div>
+                                    <div class="content-value html-content" [innerHTML]="page.question.questionDescription"></div>
+                                    <span class="badge">{{ page.question.questionType }}</span>
+                                    @if (page.question.questionOptions && page.question.questionOptions.length > 0) {
+                                      <div class="choices-list">
+                                        @for (opt of page.question.questionOptions; track $index; let oi = $index) {
+                                          <div class="choice-item" [class.correct]="opt.isCorrect">
+                                            <span class="choice-letter">{{ getChoiceLetter(oi) }}</span>
+                                            <span class="choice-text" [innerHTML]="opt.text"></span>
+                                            @if (opt.isCorrect) { <span class="correct-badge">✓ Correct</span> }
+                                          </div>
+                                        }
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                                @if (page.feedbackCorrectTitle || page.feedbackIncorrectTitle) {
+                                  <div class="feedback-block">
+                                    @if (page.feedbackCorrectTitle) {
+                                      <div class="feedback-row correct-fb">
+                                        <strong>✓ {{ page.feedbackCorrectTitle }}</strong>
+                                        <div [innerHTML]="page.feedbackCorrectSummary"></div>
+                                      </div>
+                                    }
+                                    @if (page.feedbackIncorrectTitle) {
+                                      <div class="feedback-row incorrect-fb">
+                                        <strong>✗ {{ page.feedbackIncorrectTitle }}</strong>
+                                        <div [innerHTML]="page.feedbackIncorrectSummary"></div>
+                                      </div>
+                                    }
+                                    @if (page.feedbackRetryTitle) {
+                                      <div class="feedback-row retry-fb">
+                                        <strong>🔄 {{ page.feedbackRetryTitle }}</strong>
+                                        <div [innerHTML]="page.feedbackRetrySummary"></div>
+                                      </div>
+                                    }
+                                    @if (page.partialFeedbackTitle) {
+                                      <div class="feedback-row partial-fb">
+                                        <strong>~ {{ page.partialFeedbackTitle }}</strong>
+                                        <div [innerHTML]="page.partialFeedbackSummary"></div>
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ popup ══ -->
+                            @if (page.templateType === 'popup') {
+                              <div class="template-section">
+                                <div class="template-section-title">🔔 Popup</div>
+                                <div class="inline-fields">
+                                  @if (page.textLayout) { <span class="badge">Layout: {{ page.textLayout }}</span> }
+                                  @if (page.popupEnableQuotation) { <span class="badge badge-bool">Quotation</span> }
+                                  @if (page.popupLabelInThumbnail) { <span class="badge badge-bool">Label in Thumbnail</span> }
+                                </div>
+                                @if (page.popupItems && page.popupItems.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Popup Items:</label>
+                                    <div class="reveal-list">
+                                      @for (item of page.popupItems; track $index; let pi = $index) {
+                                        <div class="reveal-item">
+                                          <strong>{{ pi + 1 }}. {{ item.title }}</strong>
+                                          <span class="badge">{{ item.layout }}</span>
+                                          <div class="html-content" [innerHTML]="item.text"></div>
+                                          @if (item.foregroundImageDescription) { <div class="sub-value">Image Desc: {{ item.foregroundImageDescription }}</div> }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ podcast ══ -->
+                            @if (page.templateType === 'podcast') {
+                              <div class="template-section">
+                                <div class="template-section-title">🎙️ Podcast</div>
+                                <div class="inline-fields">
+                                  @if (page.textLayout) { <span class="badge">Layout: {{ page.textLayout }}</span> }
+                                  @if (page.isAudioTranscript) { <span class="badge badge-bool">Interactive Transcript</span> }
+                                  @if (page.isAudioScrubbing) { <span class="badge badge-bool">Audio Scrubbing</span> }
+                                </div>
+                              </div>
+                            }
+
+                            <!-- ══ timeline ══ -->
+                            @if (page.templateType === 'timeline') {
+                              <div class="template-section">
+                                <div class="template-section-title">📅 Timeline</div>
+                                <div class="inline-fields">
+                                  @if (page.timelineAnimation) { <span class="badge">Animation: {{ page.timelineAnimation }}</span> }
+                                  @if (page.timelineSliderBehaviour) { <span class="badge">Navigation: {{ page.timelineSliderBehaviour }}</span> }
+                                </div>
+                                @if (page.timelineItems && page.timelineItems.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Timeline Items:</label>
+                                    <div class="reveal-list">
+                                      @for (item of page.timelineItems; track $index; let ti = $index) {
+                                        <div class="reveal-item">
+                                          <div class="timeline-header">
+                                            <span class="timeline-label-badge">{{ item.timelineLabel }}</span>
+                                            <strong>{{ item.timelineTitle }}</strong>
+                                          </div>
+                                          <div class="html-content" [innerHTML]="item.timelineDescription"></div>
+                                          <div class="inline-fields">
+                                            <span class="badge">{{ item.itemBoxLayout }}</span>
+                                            <span class="badge">{{ item.itemLayoutPosition }}</span>
+                                          </div>
+                                          @if (item.foregroundImageDescription) { <div class="sub-value">Image Desc: {{ item.foregroundImageDescription }}</div> }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ slideShow ══ -->
+                            @if (page.templateType === 'slideShow') {
+                              <div class="template-section">
+                                <div class="template-section-title">▶️ Slideshow</div>
+                                <div class="inline-fields">
+                                  @if (page.sliderBehaviour) { <span class="badge">Behaviour: {{ page.sliderBehaviour }}</span> }
+                                  @if (page.slideNavigation) { <span class="badge">Navigation: {{ page.slideNavigation }}</span> }
+                                </div>
+                                @if (page.personas && page.personas.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Personas:</label>
+                                    <div class="inline-fields">
+                                      @for (p of page.personas; track $index) {
+                                        <span class="badge">{{ p.personaName }}</span>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                                @if (page.slides && page.slides.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Slides:</label>
+                                    <div class="reveal-list">
+                                      @for (slide of page.slides; track $index; let si = $index) {
+                                        <div class="reveal-item">
+                                          <strong>Slide {{ si + 1 }}: {{ slide.slideTitle }}</strong>
+                                          @if (slide.slideFormat) { <span class="badge">{{ slide.slideFormat }}</span> }
+                                          @if (slide.slideImagelayout) { <span class="badge">Image: {{ slide.slideImagelayout }}</span> }
+                                          <div class="html-content" [innerHTML]="slide.slideDescription"></div>
+                                          @if (slide.slideAudioTranscript) {
+                                            <div class="content-field">
+                                              <label class="field-label">Audio:</label>
+                                              <div class="content-value">{{ slide.slideAudioTranscript }}</div>
+                                            </div>
+                                          }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                            <!-- ══ quickQuiz ══ -->
+                            @if (page.templateType === 'quickQuiz') {
+                              <div class="template-section">
+                                <div class="template-section-title">🧠 Quick Quiz</div>
+                                <div class="inline-fields">
+                                  @if (page.numberOfTakeQuestions !== undefined) { <span class="badge">Questions to Take: {{ page.numberOfTakeQuestions }}</span> }
+                                  @if (page.isQuestionPooling) { <span class="badge badge-bool">Question Pooling</span> }
+                                </div>
+                                @if (page.questionDetails && page.questionDetails.length > 0) {
+                                  <div class="content-field">
+                                    <label class="field-label">Questions:</label>
+                                    <div class="reveal-list">
+                                      @for (q of page.questionDetails; track $index; let qi = $index) {
+                                        <div class="reveal-item">
+                                          <div><strong>Q{{ qi + 1 }}:</strong> <span [innerHTML]="q.adpQuestionText"></span></div>
+                                          @if (q.adpQuestionType) { <span class="badge">{{ q.adpQuestionType }}</span> }
+                                          @if (q.options && q.options.length > 0) {
+                                            <div class="choices-list">
+                                              @for (opt of q.options; track $index; let oi = $index) {
+                                                <div class="choice-item" [class.correct]="opt.adpQuestionValue">
+                                                  <span class="choice-letter">{{ getChoiceLetter(oi) }}</span>
+                                                  <span class="choice-text" [innerHTML]="opt.adpQuestionAnswer"></span>
+                                                  @if (opt.adpQuestionValue) { <span class="correct-badge">✓ Correct</span> }
+                                                </div>
+                                              }
+                                            </div>
+                                          }
+                                          @if (q.feedbackDescription) { <div class="sub-value">Feedback: {{ q.feedbackDescription }}</div> }
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                              </div>
+                            }
+
+                          </div>
+                          <!-- end page-full-content -->
+                        }
+                      </div>
+                      <!-- end page-item -->
+                    }
+                  </div>
+                }
+              </div>
+              <!-- end lesson-item -->
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+  } @else {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <p>No course data available yet. Create a course to see details here.</p>
+    </div>
+  }
+</div>

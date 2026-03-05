@@ -1,0 +1,182 @@
+<div class="chat-preview-container">
+  <div class="preview-header">
+    <div class="header-content">
+      <h2>Preview</h2>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" 
+              [class.active]="showOnlyAccepted()"
+              (click)="toggleShowOnlyAccepted()" 
+              [title]="showOnlyAccepted() ? 'Show All Items' : 'Show Only Accepted'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        @if (showOnlyAccepted()) {
+          <span class="btn-label">Accepted Only</span>
+        }
+      </button>
+      <button class="action-btn save-btn" (click)="saveDraft()" title="Save as Draft">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        <span class="btn-label">Save</span>
+      </button>
+      <button class="action-btn publish-btn"
+              (click)="publishCourse()"
+              [disabled]="isPublishing()"
+              [class.publishing]="isPublishing()"
+              title="Publish Course to CMS">
+        @if (isPublishing()) {
+          <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a10 10 0 0 1 10 10"/>
+          </svg>
+          <span class="btn-label">Publishing…</span>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M2 12l10-10 10 10"/>
+          </svg>
+          <span class="btn-label">Publish</span>
+        }
+      </button>
+    </div>
+  </div>
+  <div class="preview-content">
+    @if (selectedMessage()) {
+      <div class="message-details">
+      
+
+        <div class="scrollable-section">
+        <!-- Course Data Component (Always Shown) - Shows First -->
+        <app-course-data-preview [courseData]="courseData() ?? null"></app-course-data-preview>
+
+        <!-- Course Outline Component (Always Shown) - Shows Second -->
+        <app-course-outline-preview 
+          [outline]="courseOutline() ?? null"
+          [showOnlyAccepted]="showOnlyAccepted()"></app-course-outline-preview>
+
+          <!-- CMS Response Data (After Acceptance) -->
+          @if (cmsData(); as cms) {
+            <div class="cms-response-section">
+              <div class="cms-header">
+                <h3>✅ Course Created in CMS</h3>
+                <span class="status-badge success">{{ cms.courseStatus || 'Created' }}</span>
+              </div>
+              
+              <div class="cms-info-grid">
+                @if (cms.courseTitle) {
+                  <div class="cms-info-card highlight">
+                    <div class="info-label">📚 Course Title</div>
+                    <div class="info-value title">{{ cms.courseTitle }}</div>
+                  </div>
+                }
+                
+                @if (cms.systemId) {
+                  <div class="cms-info-card">
+                    <div class="info-label">🔑 System ID</div>
+                    <div class="info-value">{{ cms.systemId }}</div>
+                  </div>
+                }
+                
+                @if (cms.siteId) {
+                  <div class="cms-info-card">
+                    <div class="info-label">🌐 Site ID</div>
+                    <div class="info-value">{{ cms.siteId }}</div>
+                  </div>
+                }
+                
+                @if (cms.catId) {
+                  <div class="cms-info-card">
+                    <div class="info-label">📋 Catalog ID</div>
+                    <div class="info-value">{{ cms.catId }}</div>
+                  </div>
+                }
+                
+                @if (cms.baseCatId) {
+                  <div class="cms-info-card">
+                    <div class="info-label">📦 Base Catalog ID</div>
+                    <div class="info-value">{{ cms.baseCatId }}</div>
+                  </div>
+                }
+                
+                @if (cms.courseStatus) {
+                  <div class="cms-info-card">
+                    <div class="info-label">📊 Status</div>
+                    <div class="info-value status-{{ cms.courseStatus.toLowerCase() }}">
+                      {{ cms.courseStatus }}
+                    </div>
+                  </div>
+                }
+                
+                @if (cms.accepted_at) {
+                  <div class="cms-info-card">
+                    <div class="info-label">🕒 Accepted At</div>
+                    <div class="info-value">{{ cms.accepted_at | date:'medium' }}</div>
+                  </div>
+                }
+                
+                @if (cms.coursePath) {
+                  <div class="cms-info-card full-width">
+                    <div class="info-label">📁 Course Path</div>
+                    <div class="info-value path">{{ cms.coursePath }}</div>
+                    <button class="copy-btn" (click)="copyToClipboard(cms.coursePath!)">
+                      Copy Path
+                    </button>
+                  </div>
+                }
+              </div>
+              
+              <!-- Full CMS Response (Collapsible) -->
+              @if (cms.cmsResponse) {
+                <details class="cms-full-response">
+                  <summary>View Full CMS Response</summary>
+                  <pre class="json-view">{{ cms.cmsResponse | json }}</pre>
+                  <button class="copy-json-btn" (click)="copyCMSResponse(cms.cmsResponse)">
+                    Copy Full Response
+                  </button>
+                </details>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="empty-preview">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3>No Message Selected</h3>
+        <p>Select a message from the conversation to view its details and available actions</p>
+      </div>
+    }
+
+    <!-- Publish Error Banner -->
+    @if (publishError()) {
+      <div class="publish-banner publish-banner--error">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>{{ publishError() }}</span>
+        <button class="banner-close" (click)="dismissPublishError()">✕</button>
+      </div>
+    }
+
+    <!-- Publish Success Banner -->
+    @if (publishSuccess(); as result) {
+      <div class="publish-banner publish-banner--success">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <div class="banner-body">
+          <strong>Course published successfully!</strong>
+          <span>System ID: {{ result.cmsResult.systemId }}</span>
+          @if (result.processId) {
+            <span>Content generation started · Process ID: {{ result.processId }}</span>
+          }
+        </div>
+        <button class="banner-close" (click)="dismissPublishSuccess()">✕</button>
+      </div>
+    }
+  </div>
+</div>

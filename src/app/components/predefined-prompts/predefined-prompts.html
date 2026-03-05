@@ -1,0 +1,41 @@
+<div class="predefined-prompts-container">
+  <div class="prompts-header" (click)="toggleExpanded()">
+    <h3>
+      <span class="icon">✨</span>
+      Quick Start Templates
+    </h3>
+    <button class="toggle-button" [class.expanded]="isExpanded()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M6 9l6 6 6-6"/>
+      </svg>
+    </button>
+  </div>
+
+  @if (isGenerating()) {
+    <div class="generating-overlay">
+      <div class="spinner"></div>
+      <p class="generating-text">Creating your course... This may take 30-60 seconds</p>
+      <p class="generating-subtext">Generating lessons, pages, and interactive content</p>
+    </div>
+  }
+
+  @if (isExpanded() && !isGenerating()) {
+    <div class="prompts-grid">
+      @for (prompt of prompts(); track prompt.id) {
+        <button 
+          class="prompt-card" 
+          [class]="getCategoryClass(prompt.category)"
+          (click)="selectPrompt(prompt)"
+          [title]="prompt.prompt"
+        >
+          <div class="prompt-icon">{{ prompt.icon }}</div>
+          <div class="prompt-content">
+            <h4 class="prompt-title">{{ prompt.title }}</h4>
+            <p class="prompt-preview">{{ prompt.prompt }}</p>
+          </div>
+          <div class="prompt-category">{{ prompt.category }}</div>
+        </button>
+      }
+    </div>
+  }
+</div>

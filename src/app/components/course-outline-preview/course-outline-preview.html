@@ -1,0 +1,261 @@
+<div class="detail-section outline-section">
+  @if (outline) {
+    <div class="outline-header">
+      <h3>📚 Course Outline</h3>
+    </div>
+    
+  
+
+  <!-- Module Tree -->
+  <div class="modules-tree">
+    @for (module of getFilteredModules(); track module.moduleNumber) {
+      <div class="module-card expanded" 
+           [class.accepted]="module.accepted === true" 
+           [class.rejected]="module.accepted === false">
+        <div class="module-header">
+          <div class="module-info">
+            <span class="module-number">Module {{ module.moduleNumber }}</span>
+            <span class="module-title">{{ module.title }}</span>
+            <span class="module-lessons-count">{{ module.lessonsCount }} lessons</span>
+          </div>
+          <div class="module-actions">
+            @if (module.accepted === undefined) {
+              <button class="module-btn accept" (click)="acceptModule(module, $event)" title="Accept Module">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </button>
+              <button class="module-btn reject" (click)="rejectModule(module, $event)" title="Reject Module">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            } @else {
+              <span class="module-status-badge" [class.accepted]="module.accepted === true" [class.rejected]="module.accepted === false">
+                @if (module.accepted === true) {
+                  ✓ Accepted
+                } @else {
+                  ✕ Rejected
+                }
+              </span>
+              <button class="module-btn reset" (click)="resetModuleStatus(module, $event)" title="Reset">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 12a9 9 0 019-9 9 9 0 016.36 2.64L21 3"/>
+                  <path d="M21 12a9 9 0 01-9 9 9 9 0 01-6.36-2.64L3 21"/>
+                </svg>
+              </button>
+            }
+          </div>
+        </div>
+        
+        <div class="module-content">
+          <p class="module-description">{{ module.description }}</p>
+          <div class="lessons-list">
+              @for (lesson of getFilteredLessons(module); track lesson.lessonNumber) {
+                <div class="lesson-item" 
+                     [class.accepted]="lesson.accepted === true" 
+                     [class.rejected]="lesson.accepted === false">
+                  <div class="lesson-connector">
+                    <div class="connector-line"></div>
+                    <div class="connector-dot"></div>
+                  </div>
+                  <div class="lesson-content">
+                    <div class="lesson-header">
+                      <div class="lesson-title-section">
+                        <span class="lesson-number">Lesson {{ lesson.lessonNumber }}</span>
+                        <span class="lesson-title">{{ lesson.title }}</span>
+                        <span class="lesson-duration">{{ lesson.duration }}</span>
+                        @if (lesson.template) {
+                          <button class="template-badge clickable" 
+                                  (click)="openTemplateDialog(lesson, $event)"
+                                  [title]="'Click to view template details'">
+                            <svg class="template-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                              <polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                            {{ lesson.template.displayName || lesson.template.templateName }}
+                            <svg class="template-badge-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                          </button>
+                        }
+                      </div>
+                      <div class="lesson-actions">
+                        @if (lesson.accepted === undefined) {
+                          <button class="lesson-btn accept" (click)="acceptLesson(lesson, $event)" title="Accept Lesson">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                          </button>
+                          <button class="lesson-btn reject" (click)="rejectLesson(lesson, $event)" title="Reject Lesson">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <line x1="18" y1="6" x2="6" y2="18"/>
+                              <line x1="6" y1="6" x2="18" y2="18"/>
+                            </svg>
+                          </button>
+                        } @else {
+                          <span class="lesson-status-badge" [class.accepted]="lesson.accepted === true" [class.rejected]="lesson.accepted === false">
+                            @if (lesson.accepted === true) {
+                              ✓ Accepted
+                            } @else {
+                              ✕ Rejected
+                            }
+                          </span>
+                          <button class="lesson-btn reset" (click)="resetLessonStatus(lesson, $event)" title="Reset">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <path d="M3 12a9 9 0 019-9 9 9 0 016.36 2.64L21 3"/>
+                              <path d="M21 12a9 9 0 01-9 9 9 9 0 01-6.36-2.64L3 21"/>
+                            </svg>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                    @if (lesson.objectives && lesson.objectives.length > 0) {
+                      <ul class="lesson-objectives">
+                        @for (objective of lesson.objectives; track $index) {
+                          <li>{{ objective }}</li>
+                        }
+                      </ul>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <h3>📚 Course Outline</h3>
+      <p>No course outline available yet. Create a course with modules and lessons to see the outline here.</p>
+    </div>
+  }
+</div>
+
+<!-- Template Dialog Modal -->
+@if (isTemplateDialogOpen()) {
+  <div class="template-dialog-overlay" (click)="closeTemplateDialog()">
+    <div class="template-dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <div class="dialog-title">
+          <svg class="dialog-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <div class="dialog-title-text">
+            <h3>{{ selectedTemplateLesson()?.template?.displayName || selectedTemplateLesson()?.template?.templateName }}</h3>
+            <span class="dialog-subtitle">{{ selectedTemplateLesson()?.title }}</span>
+          </div>
+        </div>
+        <button class="dialog-close-btn" (click)="closeTemplateDialog()" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="dialog-content">
+        <!-- Template Type Badge -->
+        <div class="dialog-section">
+          <div class="template-type-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            {{ selectedTemplateLesson()?.template?.templateType || selectedTemplateLesson()?.template?.category }}
+          </div>
+        </div>
+
+        <!-- Template Metadata -->
+        @if (selectedTemplateLesson()?.template?.metadata?.reason || selectedTemplateLesson()?.template?.metadata?.usage) {
+          <div class="dialog-section">
+            <h4 class="section-title">About This Template</h4>
+            
+            @if (selectedTemplateLesson()?.template?.metadata?.reason) {
+              <div class="info-card">
+                <div class="info-card-icon">💡</div>
+                <div class="info-card-content">
+                  <div class="info-card-label">Why This Template</div>
+                  <div class="info-card-value">{{ selectedTemplateLesson()?.template?.metadata?.reason }}</div>
+                </div>
+              </div>
+            }
+            
+            @if (selectedTemplateLesson()?.template?.metadata?.usage) {
+              <div class="info-card">
+                <div class="info-card-icon">🎯</div>
+                <div class="info-card-content">
+                  <div class="info-card-label">Best For</div>
+                  <div class="info-card-value">{{ selectedTemplateLesson()?.template?.metadata?.usage }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- AI-Filled Template JSON -->
+        @if (selectedTemplateLesson()?.template?.templateJson) {
+          <div class="dialog-section">
+            <div class="section-header">
+              <h4 class="section-title">AI-Filled Template Content</h4>
+              <button class="copy-btn" (click)="copyTemplateJson()" title="Copy JSON">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                </svg>
+                {{ copyButtonText() }}
+              </button>
+            </div>
+            <div class="json-viewer">
+              <pre class="json-content-dialog">{{ formatJson(selectedTemplateLesson()?.template?.templateJson) }}</pre>
+            </div>
+          </div>
+        }
+
+        <!-- Technical Details (Collapsible) -->
+        <div class="dialog-section">
+          <button class="technical-details-toggle" (click)="toggleTechnicalDetails()">
+            <svg class="toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline [attr.points]="showTechnicalDetails() ? '18 15 12 9 6 15' : '6 9 12 15 18 9'"/>
+            </svg>
+            Technical Details
+          </button>
+          
+          @if (showTechnicalDetails()) {
+            <div class="technical-details">
+              @if (selectedTemplateLesson()?.template?.templateName) {
+                <div class="tech-detail-item">
+                  <span class="tech-label">Technical Name:</span>
+                  <code class="tech-value">{{ selectedTemplateLesson()?.template?.templateName }}</code>
+                </div>
+              }
+              @if (selectedTemplateLesson()?.template?.linkedAt) {
+                <div class="tech-detail-item">
+                  <span class="tech-label">Linked At:</span>
+                  <span class="tech-value">{{ formatDate(selectedTemplateLesson()?.template?.linkedAt) }}</span>
+                </div>
+              }
+              @if (selectedTemplateLesson()?.template?.messageId) {
+                <div class="tech-detail-item">
+                  <span class="tech-label">Message ID:</span>
+                  <code class="tech-value tech-value-mono">{{ selectedTemplateLesson()?.template?.messageId }}</code>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button class="dialog-btn secondary" (click)="closeTemplateDialog()">Close</button>
+      </div>
+    </div>
+  </div>
+}

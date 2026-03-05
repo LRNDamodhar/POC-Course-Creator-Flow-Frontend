@@ -1,0 +1,74 @@
+<div class="chat-input-container">
+  @if (error()) {
+    <div class="error-banner">
+      <span class="error-message">{{ error() }}</span>
+      <button class="close-btn" (click)="clearError()">✕</button>
+    </div>
+  }
+  
+  <!-- Accepted Items Chips -->
+  @if (acceptedItems().acceptedModules.length > 0 || acceptedItems().acceptedLessons.length > 0) {
+    <div class="accepted-chips-section">
+      <div class="chips-header">
+        <h4>Attached Items:</h4>
+      </div>
+      <div class="chips-container">
+        @for (item of acceptedItems().acceptedModules; track item.module.moduleNumber) {
+          <div class="chip module-chip">
+            <svg class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            </svg>
+            <span class="chip-text">Module {{ item.module.moduleNumber }}: {{ item.module.title }}</span>
+            <button class="chip-remove" (click)="removeItem(item.messageId, item.module.moduleNumber)" title="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        }
+        @for (item of acceptedItems().acceptedLessons; track item.lesson.lessonNumber) {
+          <div class="chip lesson-chip">
+            <svg class="chip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+            </svg>
+            <span class="chip-text">M{{ item.module.moduleNumber }}-L{{ item.lesson.lessonNumber }}: {{ item.lesson.title }}</span>
+            <button class="chip-remove" (click)="removeItem(item.messageId, item.module.moduleNumber, item.lesson.lessonNumber)" title="Remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  }
+  
+  <div class="input-wrapper">
+    <textarea
+      #textarea
+      [(ngModel)]="messageInput"
+      (keypress)="onKeyPress($event)"
+      (input)="adjustTextareaHeight()"
+      [disabled]="isLoading()"
+      placeholder="Type your message..."
+      rows="1"
+      class="chat-textarea"
+    ></textarea>
+    <button 
+      (click)="sendMessage()" 
+      [disabled]="!messageInput().trim() || isLoading()"
+      class="send-button"
+      [title]="isLoading() ? 'Sending...' : 'Send message'"
+    >
+      @if (isLoading()) {
+        <span class="spinner"></span>
+      } @else {
+        <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+        </svg>
+      }
+    </button>
+  </div>
+</div>
