@@ -1,3 +1,4 @@
+
 # Assistant Message Styling Update - White, Gray & Black Theme
 
 ## Overview
