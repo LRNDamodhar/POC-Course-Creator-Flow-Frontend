@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth';
 
 export interface ActionButton {
   type: string;
@@ -110,13 +111,17 @@ export interface ChatMessage {
   status?: 'sending' | 'sent' | 'error' | 'accepted' | 'rejected';
   isStreaming?: boolean;
   actions?: ActionButton[];
-  courseData?: any; // For course creation responses
-  courseOutline?: CourseOutlineData; // For course outline responses
-  templateData?: TemplateData; // For template recommendation responses
-  cmsData?: CMSResponseData; // For CMS response data after acceptance
-  recommendations?: RecommendationItem[]; // For smart follow-up recommendations
-  toolCalled?: boolean; // Track if a tool was used
-  toolType?: 'create_course' | 'create_course_outline' | 'recommend_templates'; // Track which tool was used
+  courseData?: any;
+  courseOutline?: CourseOutlineData;
+  templateData?: TemplateData;
+  cmsData?: CMSResponseData;
+  recommendations?: RecommendationItem[];
+  toolCalled?: boolean;
+  toolType?: 'create_course' | 'create_course_outline' | 'recommend_templates';
+  // Quick start prompt chips shown inside the welcome greeting message
+  quickStartPrompts?: Array<{ id: string; title: string; prompt: string; icon: string }>;
+  // User feedback on assistant response
+  feedback?: 'like' | 'dislike' | null;
 }
 
 export interface RecommendationItem {
@@ -147,21 +152,16 @@ export class Chat {
   // Use relative URL to leverage proxy configuration
   private apiUrl = '';
 
-  constructor(private http: HttpClient) {
-    // Initialize with a new session when service is created
-    // Delay initialization slightly to ensure backend is ready
-    setTimeout(() => this.initializeSession(), 100);
+  constructor(private http: HttpClient, private authService: AuthService) {
+    // Session is created only when user clicks "New Chat" or sends the first message
   }
 
   /**
-   * Get auth token from session storage
+   * Get auth token via AuthService (single source of truth)
    * @returns Auth token or empty string if not found
    */
   private getAuthToken(): string {
-    if (typeof sessionStorage !== 'undefined') {
-      return sessionStorage.getItem('auth-preview') || '';
-    }
-    return '';
+    return this.authService.getToken();
   }
 
   /**
@@ -181,19 +181,6 @@ export class Chat {
     return headers;
   }
 
-  private async initializeSession() {
-    // Check if we already have a session
-    if (!this.sessionId()) {
-      console.log('[Chat Service] Initializing first session...');
-      try {
-        await this.createNewSession();
-      } catch (error) {
-        console.warn('[Chat Service] Failed to initialize session, will retry on first message');
-        // Session will be created when user sends first message
-      }
-    }
-  }
-
   addMessage(content: string, sender: 'user' | 'assistant' = 'user', status: 'sending' | 'sent' | 'error' = 'sent') {
     const message: ChatMessage = {
       id: `${sender}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -204,6 +191,35 @@ export class Chat {
     };
     this.messagesSignal.update(messages => [...messages, message]);
     return message;
+  }
+
+  /**
+   * Add the welcome greeting message with quick-start prompt chips.
+   * Called when starting a fresh session with no history.
+   */
+  addWelcomeMessage(): void {
+    const welcome: ChatMessage = {
+      id: `assistant-welcome-${Date.now()}`,
+      content: "👋 **Welcome to AI Course Creator!**\n\nI can help you build engaging courses in minutes. Describe what you'd like to create, or pick a quick-start template below:",
+      timestamp: new Date(),
+      sender: 'assistant',
+      status: 'sent',
+      quickStartPrompts: [
+        {
+          id: 'anti-bribery',
+          title: 'Anti-Bribery & Corruption',
+          prompt: 'Create a 2-lesson course on Anti-Bribery and Corruption',
+          icon: '⚖️'
+        },
+        {
+          id: 'harassment',
+          title: 'Harassment Prevention',
+          prompt: 'Create a 10-lesson course on Workplace Harassment Prevention',
+          icon: '🛡️'
+        }
+      ]
+    };
+    this.messagesSignal.update(messages => [...messages, welcome]);
   }
 
   updateMessage(messageId: string, updates: Partial<ChatMessage>) {
@@ -253,10 +269,7 @@ export class Chat {
   async clearMessages() {
     this.messagesSignal.set([]);
     this.selectedMessageSignal.set(null);
-    this.sessionIdSignal.set(null); // Clear session ID
-    
-    // Create a new session for the next conversation
-    await this.createNewSession();
+    this.sessionIdSignal.set(null); // Clear session ID — new session created by newChat()
   }
 
   clearError() {
@@ -693,26 +706,24 @@ export class Chat {
     try {
       console.log('[Chat Service] Restoring session:', sessionData.sessionId);
 
-      // Clear current messages
-      this.messagesSignal.set([]);
-      
       // Set session ID
       this.sessionIdSignal.set(sessionData.sessionId);
 
-      // Restore messages
+      // Restore messages — keep any welcome message already in the list,
+      // then append the historical messages after it.
       if (sessionData.messages && Array.isArray(sessionData.messages)) {
         const restoredMessages: ChatMessage[] = sessionData.messages.map((msg: any) => ({
           id: msg.messageId || `${msg.sender}-${Date.now()}`,
           content: msg.content,
           timestamp: new Date(msg.timestamp),
-          sender: msg.sender as 'user' | 'assistant', // Already correct in DB
+          sender: msg.sender as 'user' | 'assistant',
           status: (msg.status || 'sent') as 'sending' | 'sent' | 'error' | 'accepted' | 'rejected',
-          courseData: msg.courseData || null, // Direct from message
-          courseOutline: msg.courseOutline || null, // Direct from message
-          templateData: msg.templateData || null, // Restore template data
+          courseData: msg.courseData || null,
+          courseOutline: msg.courseOutline || null,
+          templateData: msg.templateData || null,
           toolCalled: msg.toolCalled || false,
           toolType: msg.toolType,
-          actions: [] // Historical messages don't have active actions
+          actions: []
         }));
 
         this.messagesSignal.set(restoredMessages);

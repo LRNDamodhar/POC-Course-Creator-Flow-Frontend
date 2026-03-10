@@ -53,6 +53,10 @@ export class AuthService {
             const user = JSON.parse(storedUser);
             this.isAuthenticatedSignal.set(true);
             this.currentUserSignal.set(user);
+            
+            // Restore token to sessionStorage so all API services (chat, course-creator) can use it
+            sessionStorage.setItem('auth-preview', authToken);
+            
             return;
           } catch (error) {
             console.error('Error parsing stored user:', error);
@@ -102,8 +106,11 @@ export class AuthService {
         this.currentUserSignal.set(user);
         
         if (this.isBrowser) {
-          // Store auth token
+          // Store auth token in localStorage (persistent across tabs/restarts)
           localStorage.setItem('auth', userDetails.token);
+          
+          // Store token in sessionStorage so chat.ts and course-creator.ts can use it immediately
+          sessionStorage.setItem('auth-preview', userDetails.token);
           
           // Store user details
           localStorage.setItem('user', JSON.stringify(user));
@@ -190,5 +197,16 @@ export class AuthService {
 
   getUsername(): string {
     return this.currentUserSignal()?.username || '';
+  }
+
+  /**
+   * Get the current auth token from sessionStorage.
+   * Falls back to localStorage if sessionStorage is missing (e.g. SSR).
+   */
+  getToken(): string {
+    if (this.isBrowser) {
+      return sessionStorage.getItem('auth-preview') || localStorage.getItem('auth') || '';
+    }
+    return '';
   }
 }

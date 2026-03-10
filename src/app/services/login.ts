@@ -114,11 +114,6 @@ export class LoginService {
           permissions: response.data.user.permissions || []
         };
 
-        // Store token in session storage for preview
-        if (typeof sessionStorage !== 'undefined') {
-          sessionStorage.setItem('auth-preview', token);
-        }
-
         return user;
       }),
       catchError((error: Response) => {

@@ -23,8 +23,8 @@ export class PredefinedPromptsComponent {
   // Input for loading state
   isGenerating = input<boolean>(false);
   
-  // Track if prompts section is expanded
-  isExpanded = signal(true);
+  // Track if prompts section is expanded — collapsed by default
+  isExpanded = signal(false);
   
   // Predefined prompts
   prompts = signal<PredefinedPrompt[]>([

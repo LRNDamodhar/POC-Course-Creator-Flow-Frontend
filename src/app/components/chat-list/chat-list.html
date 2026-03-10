@@ -1,19 +1,5 @@
 <div class="chat-list-container">
-  <div class="chat-list-header">
-    <div class="header-content">
-      <h2>AI Course Creator</h2>
-      <!-- <span class="message-count">{{ messages().length }} messages</span> -->
-    </div>
-    <div class="header-actions">
-      @if (messages().length > 0) {
-        <button class="icon-btn danger-btn" (click)="clearAll()" title="Clear All Messages">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
-          </svg>
-        </button>
-      }
-    </div>
-  </div>
+
   <div class="chat-list" #chatListContainer>
     @if (messages().length === 0) {
       <div class="empty-state">
@@ -102,7 +88,45 @@
               {{ message.content || '...' }}
             }
           </div>
-          
+
+          <!-- Quick Start Chips -->
+          @if (message.quickStartPrompts && message.quickStartPrompts.length > 0 && !message.isStreaming) {
+            <div class="quick-start-chips">
+              @for (prompt of message.quickStartPrompts; track prompt.id) {
+                <button class="quick-start-chip" (click)="handleQuickStartPrompt(prompt.prompt, $event)">
+                  <span class="chip-icon">{{ prompt.icon }}</span>
+                  <span class="chip-title">{{ prompt.title }}</span>
+                </button>
+              }
+            </div>
+          }
+
+          <!-- Like / Dislike feedback (assistant only, not streaming, not welcome) -->
+          @if (message.sender === 'assistant' && !message.isStreaming && !message.quickStartPrompts) {
+            <div class="feedback-actions">
+              <button
+                class="feedback-btn"
+                [class.active]="message.feedback === 'like'"
+                (click)="handleFeedback(message, 'like', $event)"
+                title="Good response">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3H14z"/>
+                  <path d="M7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3"/>
+                </svg>
+              </button>
+              <button
+                class="feedback-btn dislike"
+                [class.active]="message.feedback === 'dislike'"
+                (click)="handleFeedback(message, 'dislike', $event)"
+                title="Bad response">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10 15v4a3 3 0 003 3l4-9V2H5.72a2 2 0 00-2 1.7l-1.38 9a2 2 0 002 2.3H10z"/>
+                  <path d="M17 2h2.67A2.31 2.31 0 0122 4v7a2.31 2.31 0 01-2.33 2H17"/>
+                </svg>
+              </button>
+            </div>
+          }
+
           <!-- Action Buttons for Course Creation -->
           @if (hasActions(message) && !message.isStreaming) {
             <div class="message-actions">

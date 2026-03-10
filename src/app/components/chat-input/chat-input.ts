@@ -15,12 +15,6 @@ export class ChatInput implements AfterViewInit {
   @ViewChild('textarea') textarea?: ElementRef<HTMLTextAreaElement>;
 
   constructor(private chatService: Chat) {
-    // Debug: Log accepted items whenever they change
-    setInterval(() => {
-      const items = this.chatService.getAcceptedItems();
-      console.log('Accepted Items:', items);
-    }, 2000);
-    
     // Auto-resize textarea when messageInput changes
     effect(() => {
       const message = this.messageInput();
@@ -45,9 +39,7 @@ export class ChatInput implements AfterViewInit {
   
   // Get accepted items from chat service
   acceptedItems = computed(() => {
-    const items = this.chatService.getAcceptedItems();
-    console.log('ChatInput - acceptedItems computed:', items);
-    return items;
+    return this.chatService.getAcceptedItems();
   });
 
   async sendMessage() {

@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chat, CourseOutlineData, TemplateData, CMSResponseData } from '../../services/chat';
 import { CourseCreatorService, CMSCreateCoursePayload, PublishCourseResult } from '../../services/course-creator';
@@ -52,6 +52,8 @@ export class ChatPreview {
   });
 
   // Signal to control showing only accepted items
+  @Output() collapse = new EventEmitter<void>();
+
   showOnlyAccepted = signal(false);
 
   // Publish state signals

@@ -1,48 +1,47 @@
 <div class="chat-preview-container">
-  <div class="preview-header">
-    <div class="header-content">
-      <h2>Preview</h2>
-    </div>
-    <div class="header-actions">
-      <button class="icon-btn" 
-              [class.active]="showOnlyAccepted()"
-              (click)="toggleShowOnlyAccepted()" 
-              [title]="showOnlyAccepted() ? 'Show All Items' : 'Show Only Accepted'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        @if (showOnlyAccepted()) {
-          <span class="btn-label">Accepted Only</span>
-        }
-      </button>
-      <button class="action-btn save-btn" (click)="saveDraft()" title="Save as Draft">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-          <polyline points="17 21 17 13 7 13 7 21"/>
-          <polyline points="7 3 7 8 15 8"/>
-        </svg>
-        <span class="btn-label">Save</span>
-      </button>
-      <button class="action-btn publish-btn"
-              (click)="publishCourse()"
-              [disabled]="isPublishing()"
-              [class.publishing]="isPublishing()"
-              title="Publish Course to CMS">
-        @if (isPublishing()) {
-          <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2a10 10 0 0 1 10 10"/>
+
+  <!-- Panel body -->
+  <div class="preview-panel-body">
+    <div class="preview-header">
+      <div class="header-content">
+        <button class="collapse-header-btn" (click)="collapse.emit()" title="Collapse Preview">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"/>
           </svg>
-          <span class="btn-label">Publishing…</span>
-        } @else {
+          <span>Collapse</span>
+        </button>
+      </div>
+      <div class="header-actions">
+        <!-- Filter: show accepted only -->
+        <button class="icon-btn"
+                [class.active]="showOnlyAccepted()"
+                (click)="toggleShowOnlyAccepted()"
+                [title]="showOnlyAccepted() ? 'Show All Items' : 'Show Only Accepted'">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2v20M2 12l10-10 10 10"/>
+            <polyline points="20 6 9 17 4 12"/>
           </svg>
-          <span class="btn-label">Publish</span>
-        }
-      </button>
-    </div>
-  </div>
-  <div class="preview-content">
+        </button>
+
+        <!-- Publish -->
+        <button class="icon-btn publish-icon-btn"
+                (click)="publishCourse()"
+                [disabled]="isPublishing()"
+                [class.publishing]="isPublishing()"
+                title="Publish Course to CMS">
+          @if (isPublishing()) {
+            <svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a10 10 0 0 1 10 10"/>
+            </svg>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v20M2 12l10-10 10 10"/>
+            </svg>
+          }
+        </button>
+      </div>
+    </div> <!-- /preview-header -->
+
+    <div class="preview-content">
     @if (selectedMessage()) {
       <div class="message-details">
       
@@ -178,5 +177,6 @@
         <button class="banner-close" (click)="dismissPublishSuccess()">✕</button>
       </div>
     }
-  </div>
-</div>
+  </div> <!-- /preview-content -->
+  </div> <!-- /preview-panel-body -->
+</div> <!-- /chat-preview-container -->

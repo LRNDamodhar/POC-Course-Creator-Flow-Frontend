@@ -1,7 +1,8 @@
-import { Component, computed, effect, ElementRef, signal, ViewChild, Input } from '@angular/core';
+import { Component, computed, effect, ElementRef, signal, ViewChild, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chat, ChatMessage, ActionButton } from '../../services/chat';
+import { FeedbackService } from '../../services/feedback';
 import { MarkdownPipe } from '../../pipes/markdown.pipe';
 
 interface SessionSummary {
@@ -24,6 +25,8 @@ interface SessionSummary {
 export class ChatList {
   @ViewChild('chatListContainer', { static: false }) chatListContainer?: ElementRef;
   @Input() showHistoryFromParent: boolean = false;
+  @Input() showPreview: boolean = false;
+  @Output() previewToggle = new EventEmitter<void>();
   
   messages = computed(() => this.chatService.messages());
   selectedMessage = computed(() => this.chatService.selectedMessage());
@@ -59,7 +62,7 @@ export class ChatList {
     );
   });
 
-  constructor(private chatService: Chat) {
+  constructor(private chatService: Chat, private feedbackService: FeedbackService) {
     // Scroll to bottom when messages change
     effect(() => {
       const msgs = this.messages();
@@ -80,6 +83,29 @@ export class ChatList {
 
   isSelected(message: ChatMessage): boolean {
     return this.selectedMessage()?.id === message.id;
+  }
+
+  handleQuickStartPrompt(prompt: string, event: Event): void {
+    event.stopPropagation();
+    this.chatService.sendMessageToBackend(prompt);
+  }
+
+  async handleFeedback(message: ChatMessage, value: 'like' | 'dislike', event: Event): Promise<void> {
+    event.stopPropagation();
+    const sessionId = this.chatService.sessionId();
+
+    // Toggle off if same value clicked again — update UI optimistically first
+    if (message.feedback === value) {
+      this.chatService.updateMessage(message.id, { feedback: null });
+      if (sessionId) {
+        await this.feedbackService.removeFeedback(message.id, sessionId);
+      }
+    } else {
+      this.chatService.updateMessage(message.id, { feedback: value });
+      if (sessionId) {
+        await this.feedbackService.submitFeedback(message.id, sessionId, value);
+      }
+    }
   }
 
   async clearAll() {
@@ -115,7 +141,7 @@ export class ChatList {
     this.historyError.set(null);
 
     try {
-      const response = await fetch('http://localhost:3000/api/sessions/all?limit=100');
+      const response = await fetch('/api/sessions/all?limit=100');
       
       if (!response.ok) {
         throw new Error(`Failed to load sessions: ${response.statusText}`);
@@ -166,7 +192,7 @@ export class ChatList {
     try {
       this.isLoadingHistory.set(true);
       
-      const response = await fetch(`http://localhost:3000/api/session/${sessionId}/full`);
+      const response = await fetch(`/api/session/${sessionId}/full`);
       
       if (!response.ok) {
         throw new Error(`Failed to load session: ${response.statusText}`);
@@ -194,7 +220,7 @@ export class ChatList {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/session/${sessionId}`, {
+      const response = await fetch(`/api/session/${sessionId}`, {
         method: 'DELETE'
       });
 

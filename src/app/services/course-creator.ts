@@ -1,7 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-
+import { AuthService } from './auth';
+import { environment } from '../../environments/environment';
 export interface CourseGenerationResponse {
   success: boolean;
   message: string;
@@ -42,10 +43,16 @@ export interface PublishCourseResult {
   providedIn: 'root'
 })
 export class CourseCreatorService {
-  // Base URL for AI Course Creator API
+  // General AI API — proxied via /ai → https://authoring.qa4.lrn.com (avoids CORS in dev)
   private readonly API_BASE = '/ai/ai-course-creator/api';
 
-  // Base URL for Backend chat/CMS API
+  // embed-existing is on https://authoring.qa4.lrn.com.
+  // In dev: proxied via /ai (proxy.conf.json). In prod: absolute URL from environment.
+  private readonly EMBED_API_BASE = environment.production
+    ? `${environment.aiccUrl}/ai/ai-course-creator/api`
+    : '/ai/ai-course-creator/api';
+
+  // Base URL for Backend chat/CMS API (Node backend on :3001)
   private readonly BACKEND_API_BASE = '';
 
   // Loading state
@@ -60,20 +67,13 @@ export class CourseCreatorService {
   // Error state
   error = signal<string | null>(null);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {}
 
   /**
-   * Get auth token from session storage (following existing auth pattern)
+   * Get auth token via AuthService (single source of truth)
    */
   private getAuthToken(): string {
-    if (typeof sessionStorage !== 'undefined') {
-      const preview = sessionStorage.getItem('auth-preview');
-      if (preview) return preview;
-    }
-    if (typeof localStorage !== 'undefined') {
-      return localStorage.getItem('auth') || '';
-    }
-    return '';
+    return this.authService.getToken();
   }
 
   /**
@@ -104,11 +104,18 @@ export class CourseCreatorService {
 
     try {
       console.log('[Course Creator] Generating course with prompt:', userPrompt);
+      const token = this.getAuthToken();
 
       const response = await firstValueFrom(
         this.http.post<CourseGenerationResponse>(
           `${this.API_BASE}/promptCourse/generate-direct`,
-          { userPrompt }
+          { userPrompt },
+          {
+            headers: new HttpHeaders({
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            })
+          }
         )
       );
 
@@ -145,7 +152,8 @@ export class CourseCreatorService {
     const response = await fetch(`${this.BACKEND_API_BASE}/api/action/accept`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
         data: payload,
@@ -187,6 +195,7 @@ export class CourseCreatorService {
     cmsIds: CMSCreateCourseResult
   ): Promise<string> {
     const username = this.getUsername();
+    const token = this.getAuthToken();
 
     console.log('[Course Creator] Step 2 – Embedding existing course JSON into CMS...');
     console.log('[Course Creator] Using CMS IDs:', {
@@ -197,7 +206,7 @@ export class CourseCreatorService {
 
     const response = await firstValueFrom(
       this.http.post<any>(
-        `${this.API_BASE}/promptCourse/embed-existing`,
+        `${this.EMBED_API_BASE}/promptCourse/embed-existing`,
         {
           courseJson,
           systemId: cmsIds.systemId,
@@ -206,7 +215,10 @@ export class CourseCreatorService {
           username
         },
         {
-          headers: new HttpHeaders({ 'Content-Type': 'application/json' })
+          headers: new HttpHeaders({
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          })
         }
       )
     );

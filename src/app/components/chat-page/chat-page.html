@@ -3,66 +3,71 @@
     <div class="header-content">
       <h1>AI Course Creator Chat</h1>
       <div class="user-info">
-        <!-- New Chat Button -->
-        <button class="action-button new-chat-button" (click)="newChat()" title="Start New Chat">
+        <!-- New Chat -->
+        <button class="header-icon-btn" (click)="newChat()" title="New Chat">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 5v14M5 12h14"/>
           </svg>
-          <span>New Chat</span>
         </button>
-        
-        <!-- History Button -->
-        <button class="action-button history-button" (click)="toggleHistory()" title="View Session History">
+
+        <!-- History -->
+        <button class="header-icon-btn" (click)="toggleHistory()" title="Session History">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 12a9 9 0 019-9 9.75 9.75 0 016.74 2.74L21 8"/>
             <path d="M21 3v5h-5"/>
             <path d="M3 12a9 9 0 009 9 9.75 9.75 0 006.74-2.74L21 16"/>
           </svg>
-          <span>History</span>
         </button>
-        
-        <button class="logout-button" (click)="logout()">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 14H3.33333C2.97971 14 2.64057 13.8595 2.39052 13.6095C2.14048 13.3594 2 13.0203 2 12.6667V3.33333C2 2.97971 2.14048 2.64057 2.39052 2.39052C2.64057 2.14048 2.97971 2 3.33333 2H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10.6667 11.3333L14 7.99999L10.6667 4.66666" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Logout -->
+        <button class="header-icon-btn" (click)="logout()" title="Logout">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
           </svg>
-          Logout
         </button>
       </div>
     </div>
   </div>
 
   <div class="main-content">
+
+    <!-- Floating sticky-note preview toggle — hidden when panel is open -->
+    @if (!showPreview()) {
+      <button
+        class="preview-sticky-btn"
+        (click)="togglePreview()"
+        title="Show Preview">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span>Preview</span>
+      </button>
+    }
+
     <!-- Left Side: Chat Input and List -->
     <div class="left-panel">
+
       <div class="chat-list-section">
-        <app-chat-list [showHistoryFromParent]="showHistory()"></app-chat-list>
-      </div>
-      
-      <!-- Predefined Prompts Section -->
-      <div class="predefined-prompts-section">
-        <app-predefined-prompts 
-          [isGenerating]="courseCreatorService.isGenerating()"
-          (promptSelected)="onPromptSelected($event)">
-        </app-predefined-prompts>
-        
-        @if (courseCreatorService.error()) {
-          <div class="error-message">
-            <span>{{ courseCreatorService.error() }}</span>
-            <button (click)="courseCreatorService.clearError()">✕</button>
-          </div>
-        }
+        <app-chat-list
+          [showHistoryFromParent]="showHistory()"
+          [showPreview]="showPreview()"
+          (previewToggle)="togglePreview()">
+        </app-chat-list>
       </div>
       
       <div class="chat-input-section">
         <app-chat-input></app-chat-input>
       </div>
     </div>
-    
-    <!-- Right Side: Preview -->
-    <div class="right-panel">
-      <app-chat-preview></app-chat-preview>
-    </div>
+
+    <!-- Right Side: Preview (hidden by default, toggled via header button) -->
+    @if (showPreview()) {
+      <div class="right-panel">
+        <app-chat-preview (collapse)="togglePreview()"></app-chat-preview>
+      </div>
+    }
   </div>
 </div>
