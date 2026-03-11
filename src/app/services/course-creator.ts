@@ -50,7 +50,7 @@ export class CourseCreatorService {
   // In dev: proxied via /ai (proxy.conf.json). In prod: absolute URL from environment.
   private readonly EMBED_API_BASE = environment.production
     ? `${environment.aiccUrl}/ai/ai-course-creator/api`
-    : '/ai/ai-course-creator/api';
+    : `${environment.aiccUrl}/ai/ai-course-creator/api`;
 
   // Base URL for Backend chat/CMS API (Node backend on :3001)
   private readonly BACKEND_API_BASE = '';
